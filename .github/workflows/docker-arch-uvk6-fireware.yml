@@ -1,0 +1,53 @@
+name: docker-arch-uvk6-fireware.yml
+on: workflow_dispatch
+jobs:
+  ubuntu:
+    name: Ubuntu Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: DumpInfo
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          JOB_CONTEXT: ${{ toJson(job) }}
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+        run: |
+          echo "curl cip.cc" && curl cip.cc
+          echo "env" && env
+          echo "pwd" && pwd
+          echo "cat /proc/cpuinfo" && cat /proc/cpuinfo
+          echo "cat /proc/cmdline" && cat /proc/cmdline
+          echo "df -h" && df -h
+          echo "fdisk -l" && fdisk -l
+          echo "\$GITHUB_PATH" && echo $GITHUB_PATH
+          echo "\$GITHUB_ENV" && echo $GITHUB_ENV
+          echo "\$GITHUB_SHA" && echo $GITHUB_SHA 
+          echo "\$GITHUB_REPOSITORY" && echo $GITHUB_REPOSITORY
+          echo "\$GITHUB_WORKSPACE" && echo $GITHUB_WORKSPACE
+          echo "\$GITHUB_CONTEXT" && echo "$GITHUB_CONTEXT"
+          echo "\$JOB_CONTEXT" && echo "$JOB_CONTEXT"
+          echo "\$STEPS_CONTEXT" && echo "$STEPS_CONTEXT"
+          echo "\$RUNNER_CONTEXT" && echo "$RUNNER_CONTEXT"
+          echo "\$STRATEGY_CONTEXT" && echo "$STRATEGY_CONTEXT"
+          echo "\$MATRIX_CONTEXT" && echo "$MATRIX_CONTEXT"
+      - name: GitClone
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install build-essential vim wget curl git make gcc unzip
+          sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install wget curl vim cmake make gcc g++ automake openssl git unzip zip build-essential libssl-dev zlib1g-dev autoconf flex bison gperf libsqlite3-dev libicu-dev -y
+          #docker.io
+          sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install procps inetutils-ping 
+          echo "host启动docker容器"
+          docker pull archlinux:base-20250810.0.398652
+          docker run --name  "archlinux20250810" -itd --init archlinux:base-20250810.0.398652
+          git clone --depth 1 https://github.com/sfantree/uvk6_adjustable_power.git
+          docker cp uvk6_adjustable_power/script/build.sh archlinux20250810:/root/
+          docker exec "archlinux20250810" /bin/bash -c "chmod +x /root/build.sh"
+          docker exec "archlinux20250810" /bin/bash -c "bash /root/build.sh"
+          docker cp archlinux20250810:/tmp/LOSEHU132E.bin /tmp/LOSEHU132E.bin
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: LOSEHU132E.bin
+          path: /tmp/LOSEHU132E.bin
