@@ -1,6 +1,6 @@
-diff -Nuar uv-k5-firmware-custom-0.13.2/Makefile uv-k5-firmware-custom/Makefile
+diff -Nuar uv-k5-firmware-custom-0.13.2/Makefile uv-k5-firmware-custom-0.13.2-mod/Makefile
 --- uv-k5-firmware-custom-0.13.2/Makefile	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/Makefile	2025-08-19 13:04:02.657600052 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/Makefile	2025-08-21 09:09:50.702358645 +0000
 @@ -20,10 +20,10 @@
  ENABLE_TX1750                 ?= 0
  ENABLE_PWRON_PASSWORD         ?= 0
@@ -19,7 +19,7 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/Makefile uv-k5-firmware-custom/Makefile
  ENABLE_DOCK 		          ?= 0
  ENABLE_CUSTOM_SIDEFUNCTIONS   ?= 1
 +
-+ENABLE_CUSTOM_POWER   ?= 1
++ENABLE_CUSTOM_POWER           ?= 1
 +
  ENABLE_SIDEFUNCTIONS_SEND     ?= 1
  ENABLE_BLOCK                  ?= 0
@@ -35,9 +35,9 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/Makefile uv-k5-firmware-custom/Makefile
  ifeq ($(ENABLE_TIMER),1)
      CFLAGS  += -DENABLE_TIMER
  endif
-diff -Nuar uv-k5-firmware-custom-0.13.2/app/menu.c uv-k5-firmware-custom/app/menu.c
+diff -Nuar uv-k5-firmware-custom-0.13.2/app/menu.c uv-k5-firmware-custom-0.13.2-mod/app/menu.c
 --- uv-k5-firmware-custom-0.13.2/app/menu.c	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/app/menu.c	2025-08-19 22:39:32.691309115 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/app/menu.c	2025-08-21 09:08:26.882178008 +0000
 @@ -168,7 +168,15 @@
  
  int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax) {
@@ -46,12 +46,12 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/app/menu.c uv-k5-firmware-custom/app/men
 + #ifdef ENABLE_CUSTOM_POWER
 +         case MENU_CUSTOM_POWER:
 +           *pMin = 0;
-+	   //*pMax = 9;
-+	   *pMax = 54;
-+	   break; 
++           //*pMax = 9;
++           *pMax = 54;
++           break; 
 +#endif
 +
-+	case MENU_SQL:
++   case MENU_SQL:
              *pMin = 0;
              *pMax = 9;
              break;
@@ -61,15 +61,15 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/app/menu.c uv-k5-firmware-custom/app/men
  
 -        case MENU_SQL:
 +#ifdef ENABLE_CUSTOM_POWER
-+ 	case MENU_CUSTOM_POWER:
++       case MENU_CUSTOM_POWER:
 +            gEeprom.CUSTOM_POWER_FACTOR = gSubMenuSelection;
-+            gVfoConfigureMode = VFO_CONFIGURE;
-+	    gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
++            //gVfoConfigureMode = VFO_CONFIGURE;
++            gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 +            //gFlagResetVfos = true;
 +            break;
 +#endif
 +
-+	case MENU_SQL:
++       case MENU_SQL:
              gEeprom.SQUELCH_LEVEL = gSubMenuSelection;
              gVfoConfigureMode = VFO_CONFIGURE;
              break;
@@ -80,24 +80,24 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/app/menu.c uv-k5-firmware-custom/app/men
 -        case MENU_SQL:
 +
 +#ifdef ENABLE_CUSTOM_POWER
-+    	case MENU_CUSTOM_POWER:
++       case MENU_CUSTOM_POWER:
 +            gSubMenuSelection = gEeprom.CUSTOM_POWER_FACTOR;
 +            break;
 +#endif
 +
-+	case MENU_SQL:
++   case MENU_SQL:
              gSubMenuSelection = gEeprom.SQUELCH_LEVEL;
              break;
  
-diff -Nuar uv-k5-firmware-custom-0.13.2/chinese.h uv-k5-firmware-custom/chinese.h
+diff -Nuar uv-k5-firmware-custom-0.13.2/chinese.h uv-k5-firmware-custom-0.13.2-mod/chinese.h
 --- uv-k5-firmware-custom-0.13.2/chinese.h	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/chinese.h	2025-08-18 22:11:51.202974590 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/chinese.h	2025-08-21 09:13:19.430811605 +0000
 @@ -151,8 +151,16 @@
  #define 副信道发射 "DUAL SEND"
  #define 开机显示 "POnMsg"
  
 +#ifdef ENABLE_CUSTOM_POWER
-+#define 自定功率 "CusPwr"
++#define 自定功率 "QRP Pwr"
 +#endif
  
  #else
@@ -121,28 +121,17 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/chinese.h uv-k5-firmware-custom/chinese.
  #define 步进频率 "\xB2\xBD\xBD\xF8\xC6\xB5\xC2\xCA"
  #define 接收数字亚音 "\xBD\xD3\xCA\xD5\xCA\xFD\xD7\xD6\xD1\xC7\xD2\xF4"
  #define 接收模拟亚音 "\xBD\xD3\xCA\xD5\xC4\xA3\xC4\xE2\xD1\xC7\xD2\xF4"
-diff -Nuar uv-k5-firmware-custom-0.13.2/driver/bk4819.c uv-k5-firmware-custom/driver/bk4819.c
---- uv-k5-firmware-custom-0.13.2/driver/bk4819.c	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/driver/bk4819.c	2025-08-19 14:07:00.473825439 +0000
-@@ -721,6 +721,7 @@
-     //
-     //                                  280MHz       gain 1 = 1  gain 2 = 0  gain 1 = 4  gain 2 = 2
-     const uint8_t gain = (frequency < 28000000) ? (1u << 3) | (0u << 0) : (4u << 3) | (2u << 0);
-+    //const uint8_t gain = (frequency < 28000000) ? (1u << 3) | (0u << 0) : (7u << 3) | (7u << 0);
-     const uint8_t enable = 1;
-     BK4819_WriteRegister(BK4819_REG_36, (bias << 8) | (enable << 7) | (gain << 0));
- }
-diff -Nuar uv-k5-firmware-custom-0.13.2/misc.c uv-k5-firmware-custom/misc.c
+diff -Nuar uv-k5-firmware-custom-0.13.2/misc.c uv-k5-firmware-custom-0.13.2-mod/misc.c
 --- uv-k5-firmware-custom-0.13.2/misc.c	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/misc.c	2025-08-19 12:12:17.386925837 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/misc.c	2025-08-21 09:19:20.419600242 +0000
 @@ -246,6 +246,11 @@
  
  volatile uint8_t boot_counter_10ms;
  
 +#ifdef ENABLE_CUSTOM_POWER
 +    uint8_t gTxp0 = 0;
-+    uint8_t gTxp1 = 0;
-+    uint8_t gTxp2 = 0;
++    //uint8_t gTxp1 = 0;
++    //uint8_t gTxp2 = 0;
 +#endif
  
  uint8_t gIsLocked = 0xFF;
@@ -154,94 +143,23 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/misc.c uv-k5-firmware-custom/misc.c
 -}
 \ No newline at end of file
 +}
-diff -Nuar uv-k5-firmware-custom-0.13.2/misc.h uv-k5-firmware-custom/misc.h
+diff -Nuar uv-k5-firmware-custom-0.13.2/misc.h uv-k5-firmware-custom-0.13.2-mod/misc.h
 --- uv-k5-firmware-custom-0.13.2/misc.h	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/misc.h	2025-08-19 12:15:13.631296084 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/misc.h	2025-08-21 09:19:52.999671363 +0000
 @@ -332,5 +332,10 @@
  void FUNCTION_NOP();
  inline bool SerialConfigInProgress() { return gSerialConfigCountDown_500ms != 0; }
  
 +#ifdef ENABLE_CUSTOM_POWER
 +    extern uint8_t gTxp0;
-+    extern uint8_t gTxp1;
-+    extern uint8_t gTxp2;
++    //extern uint8_t gTxp1;
++    //extern uint8_t gTxp2;
 +#endif
  
  #endif
-diff -Nuar uv-k5-firmware-custom-0.13.2/output.txt uv-k5-firmware-custom/output.txt
---- uv-k5-firmware-custom-0.13.2/output.txt	1970-01-01 00:00:00.000000000 +0000
-+++ uv-k5-firmware-custom/output.txt	2025-08-18 22:13:23.035167980 +0000
-@@ -0,0 +1,67 @@
-+rm -f *.bin
-+make build ENABLE_CHINESE_FULL=0 ENABLE_ENGLISH=1 ENABLE_FMRADIO=1 ENABLE_MESSENGER=1 ENABLE_MESSENGER_DELIVERY_NOTIFICATION=1 ENABLE_MESSENGER_NOTIFICATION=1 ENABLE_SPECTRUM=1 ENABLE_MDC1200=1 ENABLE_MDC1200_EDIT=1 ENABLE_MDC1200_CONTACT=1
-+make[1]: Entering directory '/root/uv-k5-firmware-custom'
-+E
-+chmod +x del_linux.sh
-+sh ./del_linux.sh
-+Deletion complete.
-+python fw-pack.py firmware.bin LOSEHU LOSEHU132E.bin
-+arm-none-eabi-size firmware
-+   text	   data	    bss	    dec	    hex	filename
-+  61052	     52	   3528	  64632	   fc78	firmware
-+make[1]: Leaving directory '/root/uv-k5-firmware-custom'
-+make build ENABLE_CHINESE_FULL=4 ENABLE_ENGLISH=1 ENABLE_DOPPLER=1 ENABLE_SPECTRUM=1 ENABLE_FMRADIO=1 ENABLE_MDC1200=1 ENABLE_MDC1200_EDIT=1 ENABLE_MDC1200_CONTACT=1
-+make[1]: Entering directory '/root/uv-k5-firmware-custom'
-+EK
-+chmod +x del_linux.sh
-+sh ./del_linux.sh
-+Deletion complete.
-+python fw-pack.py firmware.bin LOSEHU LOSEHU132EK.bin
-+arm-none-eabi-size firmware
-+   text	   data	    bss	    dec	    hex	filename
-+  61248	     52	   3592	  64892	   fd7c	firmware
-+make[1]: Leaving directory '/root/uv-k5-firmware-custom'
-+make build ENABLE_CHINESE_FULL=0 ENABLE_SPECTRUM=1 ENABLE_FMRADIO=1 ENABLE_MDC1200=1 ENABLE_MDC1200_EDIT=1 ENABLE_MDC1200_CONTACT=1
-+make[1]: Entering directory '/root/uv-k5-firmware-custom'
-+chmod +x del_linux.sh
-+sh ./del_linux.sh
-+Deletion complete.
-+python fw-pack.py firmware.bin LOSEHU LOSEHU132.bin
-+arm-none-eabi-size firmware
-+   text	   data	    bss	    dec	    hex	filename
-+  61280	     52	   3272	  64604	   fc5c	firmware
-+make[1]: Leaving directory '/root/uv-k5-firmware-custom'
-+make build ENABLE_CHINESE_FULL=4 ENABLE_DOPPLER=1 ENABLE_SPECTRUM=1 ENABLE_FMRADIO=1 ENABLE_MDC1200=1 ENABLE_MDC1200_EDIT=1 ENABLE_MDC1200_CONTACT=1
-+make[1]: Entering directory '/root/uv-k5-firmware-custom'
-+K
-+chmod +x del_linux.sh
-+sh ./del_linux.sh
-+Deletion complete.
-+python fw-pack.py firmware.bin LOSEHU LOSEHU132K.bin
-+arm-none-eabi-size firmware
-+   text	   data	    bss	    dec	    hex	filename
-+  61320	     52	   3596	  64968	   fdc8	firmware
-+make[1]: Leaving directory '/root/uv-k5-firmware-custom'
-+make build ENABLE_CHINESE_FULL=4 ENABLE_DOPPLER=1 ENABLE_PINYIN=1 ENABLE_SPECTRUM=1 ENABLE_FMRADIO=1
-+make[1]: Entering directory '/root/uv-k5-firmware-custom'
-+H
-+chmod +x del_linux.sh
-+sh ./del_linux.sh
-+Deletion complete.
-+python fw-pack.py firmware.bin LOSEHU LOSEHU132H.bin
-+arm-none-eabi-size firmware
-+   text	   data	    bss	    dec	    hex	filename
-+  61168	     56	   3536	  64760	   fcf8	firmware
-+make[1]: Leaving directory '/root/uv-k5-firmware-custom'
-+make build ENABLE_CHINESE_FULL=4 ENABLE_PINYIN=1 ENABLE_4732=1 ENABLE_4732SSB=1  ENABLE_SPECTRUM=1
-+make[1]: Entering directory '/root/uv-k5-firmware-custom'
-+H
-+SI4732
-+chmod +x del_linux.sh
-+sh ./del_linux.sh
-+Deletion complete.
-+python fw-pack.py firmware.bin LOSEHU LOSEHU132HS.bin
-+arm-none-eabi-size firmware
-+   text	   data	    bss	    dec	    hex	filename
-+  61128	    188	   3188	  64504	   fbf8	firmware
-+make[1]: Leaving directory '/root/uv-k5-firmware-custom'
-diff -Nuar uv-k5-firmware-custom-0.13.2/radio.c uv-k5-firmware-custom/radio.c
+diff -Nuar uv-k5-firmware-custom-0.13.2/radio.c uv-k5-firmware-custom-0.13.2-mod/radio.c
 --- uv-k5-firmware-custom-0.13.2/radio.c	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/radio.c	2025-08-19 22:35:54.878838341 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/radio.c	2025-08-21 09:21:11.619842957 +0000
 @@ -494,6 +494,7 @@
      EEPROM_ReadBuffer(0x1ED0 + (Band * 16) + (pInfo->OUTPUT_POWER * 3), Txp, 3);
  
@@ -281,8 +199,8 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/radio.c uv-k5-firmware-custom/radio.c
 +    Txp[1] = 255;
 +    Txp[2] = 255;
 +    gTxp0 = Txp[0];
-+    gTxp1 = Txp[1];
-+    gTxp2 = Txp[2];
++    //gTxp1 = Txp[1];
++    //gTxp2 = Txp[2];
 +#endif
 +#endif    
 +
@@ -309,8 +227,8 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/radio.c uv-k5-firmware-custom/radio.c
 +        }
 +    }
 +    gTxp0 = Txp[0];
-+    gTxp1 = Txp[1];
-+    gTxp2 = Txp[2];
++    //gTxp1 = Txp[1];
++    //gTxp2 = Txp[2];
 +#endif
 +#endif
 +
@@ -337,15 +255,15 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/radio.c uv-k5-firmware-custom/radio.c
 +        }
 +    }
 +    gTxp0 = Txp[0];
-+    gTxp1 = Txp[1];
-+    gTxp2 = Txp[2];
++    //gTxp1 = Txp[1];
++    //gTxp2 = Txp[2];
 +#endif
  
      pInfo->TXP_CalculatedSetting = FREQUENCY_CalculateOutputPower(
              Txp[0],
-diff -Nuar uv-k5-firmware-custom-0.13.2/settings.c uv-k5-firmware-custom/settings.c
+diff -Nuar uv-k5-firmware-custom-0.13.2/settings.c uv-k5-firmware-custom-0.13.2-mod/settings.c
 --- uv-k5-firmware-custom-0.13.2/settings.c	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/settings.c	2025-08-18 22:24:57.024630754 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/settings.c	2025-08-21 09:05:54.625849796 +0000
 @@ -564,11 +564,15 @@
      State[2] = gEeprom.KEY_1_LONG_PRESS_ACTION;
      State[3] = gEeprom.KEY_2_SHORT_PRESS_ACTION;
@@ -371,9 +289,9 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/settings.c uv-k5-firmware-custom/setting
 -}
 \ No newline at end of file
 +}
-diff -Nuar uv-k5-firmware-custom-0.13.2/settings.h uv-k5-firmware-custom/settings.h
+diff -Nuar uv-k5-firmware-custom-0.13.2/settings.h uv-k5-firmware-custom-0.13.2-mod/settings.h
 --- uv-k5-firmware-custom-0.13.2/settings.h	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/settings.h	2025-08-18 00:29:39.183187742 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/settings.h	2025-08-21 09:05:54.625849796 +0000
 @@ -206,6 +206,9 @@
      uint8_t               KEY_2_SHORT_PRESS_ACTION;
      uint8_t               KEY_2_LONG_PRESS_ACTION;
@@ -391,36 +309,34 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/settings.h uv-k5-firmware-custom/setting
 -#endif
 \ No newline at end of file
 +#endif
-diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.c uv-k5-firmware-custom/ui/menu.c
+diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.c uv-k5-firmware-custom-0.13.2-mod/ui/menu.c
 --- uv-k5-firmware-custom-0.13.2/ui/menu.c	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/ui/menu.c	2025-08-19 22:38:58.147234477 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/ui/menu.c	2025-08-21 09:30:53.757107021 +0000
 @@ -98,6 +98,10 @@
                  {/*"M Long",*/ VOICE_ID_INVALID,                       MENU_MLONG         ,M键长按},
  #endif
  
 +#ifdef ENABLE_CUSTOM_POWER
-+    {/*"CusPwr",*/    VOICE_ID_INVALID, MENU_CUSTOM_POWER, 自定功率},
++                {/*"QRP Pwr",*/VOICE_ID_INVALID, MENU_CUSTOM_POWER, 自定功率},
 +#endif
 +
  #ifdef ENABLE_DTMF_CALLING
  
                  {/*"ANI ID",*/ VOICE_ID_ANI_CODE,                      MENU_ANI_ID        ,DTMF_ID},
-@@ -697,7 +701,14 @@
+@@ -697,6 +701,13 @@
  
      BACKLIGHT_TurnOn();
      switch (UI_MENU_GetCurrentMenuId()) {
--        case MENU_SQL:
 +#ifdef ENABLE_CUSTOM_POWER
-+ 	case MENU_CUSTOM_POWER:
++        case MENU_CUSTOM_POWER:
 +           //sprintf(String, "%d", gSubMenuSelection);
 +           //sprintf(String, "%d,%d,%d,%d", gSubMenuSelection, gTxp0, gTxp1, gTxp2);
-+	   sprintf(String, "factor: %d\ntxp: %d,%d,%d", gSubMenuSelection, gTxp0, gTxp1, gTxp2); 
-+	   break;
++           sprintf(String, "factor:%d\ntxp:%d", gSubMenuSelection, gTxp0); 
++           break;
 +#endif
-+	case MENU_SQL:
+         case MENU_SQL:
              sprintf(String, "%d", gSubMenuSelection);
              break;
- 
 @@ -1700,4 +1711,4 @@
  
  }
@@ -428,9 +344,9 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.c uv-k5-firmware-custom/ui/menu.
 -#endif
 \ No newline at end of file
 +#endif
-diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.h uv-k5-firmware-custom/ui/menu.h
+diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.h uv-k5-firmware-custom-0.13.2-mod/ui/menu.h
 --- uv-k5-firmware-custom-0.13.2/ui/menu.h	2024-09-21 07:16:05.000000000 +0000
-+++ uv-k5-firmware-custom/ui/menu.h	2025-08-18 12:38:42.813969590 +0000
++++ uv-k5-firmware-custom-0.13.2-mod/ui/menu.h	2025-08-21 09:05:54.625849796 +0000
 @@ -145,6 +145,9 @@
      MENU_F2LONG,
      MENU_MLONG,
