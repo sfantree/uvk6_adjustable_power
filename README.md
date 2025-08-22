@@ -1,18 +1,21 @@
 # uvk6_adjustable_power
 
-泉盛uvk5/k6可微调发射功率0-5W调节间隔0.1W，基于luoshihu固件0.13.2版本修改，可用于QRP，中继传播，天线效果等。
+可连续微调功率的泉盛UV-K5/K6固件，基于[losehu](https://github.com/losehu/uv-k5-firmware-custom)固件0.13.2版本修改，可用于QRP通联，中继传播预测，测试天线效果等
 
-QRP：最低功率通联
+[项目地址](https://github.com/sfantree/uvk6_adjustable_power)
+[演示视频](https://www.bilibili.com/video/BV1TretzZECg)
 
-中继传播：在不同位置测试中继回波的最小功率，预测衰耗和传播范围。
+QRP通联：最低功率通联
 
-天线效果：假设能打上中继的原厂天线最小功率1W，自制天线0.25W，可以推算自制天线相对增益有6dbm，配合场强表可以做到更精细的量化。
+中继传播预测：在不同位置测试中继回波的最小功率，预测衰耗和传播范围
+
+测试天线效果：假设能打上中继的原厂天线最小功率1W，自制天线0.25W，可以推算自制天线相对增益有6dbm，配合场强表可以做到更精细的量化
 
 ### 使用说明
 
-编译可以借助action，跑完会有个LOSEHU132E.bin。这是最精简的测试版，其他需求可以照着luoshihu项目说明进行添加。
+编译或下载固件，可以借助[github action](https://github.com/sfantree/uvk6_adjustable_power/actions)进行云编译，点开绿色成功的workflow runs，等跑完在Artifacts里会有个LOSEHU132E.bin，下载使用K5Web刷入。当然这里是精简其他功能的测试版，想增加其他需求可以照着losehu原项目的readme进行添加
 
-进入设置切换到QRP Pwr（第34）的菜单，切换不同的Factor，还有配合F+6的高中低三档，修改不同的Txp值。Txp值更新后会在QRP Pwr菜单中显示。功率和Txp值可以参考下表。
+进入设置切换到QRPPwr（第34）的菜单，切换不同的Factor，还有配合F+6的高中低三档，修改不同的Txp值。Txp值更新后会在QRP Pwr菜单中显示。功率和Txp值可以参考下表
 
 ### 测试结果
 
@@ -127,4 +130,35 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax) {
             break;
 ```
 
+不同的Factor，还有配合F+6的高中低三档，修改不同的Txp值
 
+```c
+#ifdef ENABLE_CUSTOM_POWER
+    uint8_t factor = gEeprom.CUSTOM_POWER_FACTOR;
+    //if(factor >= 1 && factor <= 9) {
+    if(factor >= 1 && factor <= 54) {
+        uint8_t txp_min = 0;
+        uint8_t factor_max = 54;
+        uint8_t step = 1;
+        if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
+            Txp[0] = txp_min + 3 * step * (factor_max - factor);
+            Txp[1] = txp_min + 3 * step * (factor_max - factor);
+            Txp[2] = txp_min + 3 * step * (factor_max - factor);
+        }
+        else if (pInfo->OUTPUT_POWER == OUTPUT_POWER_MID){
+            Txp[0] = txp_min + 3 * step * (factor_max - factor) + step;
+            Txp[1] = txp_min + 3 * step * (factor_max - factor) + step;
+            Txp[2] = txp_min + 3 * step * (factor_max - factor) + step;
+        } else {
+            Txp[0] = txp_min + 3 * step * (factor_max - factor) + 2 * step;
+            Txp[1] = txp_min + 3 * step * (factor_max - factor) + 2 * step;
+            Txp[2] = txp_min + 3 * step * (factor_max - factor) + 2 * step;
+        }
+    }
+    gTxp0 = Txp[0];
+#endif
+```
+
+### 其他
+
+修改来自BH6SJM，73
