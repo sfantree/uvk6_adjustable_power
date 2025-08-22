@@ -97,7 +97,7 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/chinese.h uv-k5-firmware-custom-0.13.2-m
  #define 开机显示 "POnMsg"
  
 +#ifdef ENABLE_CUSTOM_POWER
-+#define 自定功率 "QRP Pwr"
++#define 自定功率 "QRPPwr"
 +#endif
  
  #else
@@ -317,7 +317,7 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.c uv-k5-firmware-custom-0.13.2-m
  #endif
  
 +#ifdef ENABLE_CUSTOM_POWER
-+                {/*"QRP Pwr",*/ VOICE_ID_INVALID, MENU_CUSTOM_POWER, 自定功率},
++                {/*"QRPPwr",*/ VOICE_ID_INVALID, MENU_CUSTOM_POWER, 自定功率},
 +#endif
 +
  #ifdef ENABLE_DTMF_CALLING
@@ -357,4 +357,3 @@ diff -Nuar uv-k5-firmware-custom-0.13.2/ui/menu.h uv-k5-firmware-custom-0.13.2-m
      MENU_BATTYP
  };
  
-
